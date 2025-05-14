@@ -18,15 +18,15 @@ func main() {
 
 	source := ipsum.GenerateBytes()
 	phrase := tiny.NewPhrase(source...)
-	l, r := phrase.BreakMeasuresApart(2)
+	leftBits, rightBits := phrase.BreakMeasurementsApart(2)
 
 	h1 := sdl2.Create(core.Impulse, false, when.Frequency(&framerate), "Stacked Byte Waves", nil, nil)
 	view := viewport.NewStackedByteWave(h1, backgroundColor)
-	view.AddBytes(colors.Red, source)
-	view.AddBytes(colors.Green, l.AsBytes())
-	view.AddBytes(colors.Blue, r.AsBytes())
+	view.AddBytes(colors.SlateBlue, source)
+	view.AddBytes(colors.LimeGreen, leftBits.AsBytes())
+	view.AddBytes(colors.Fuchsia, rightBits.AsBytes())
 
-	recombined := tiny.RecombinePhrases(l, r)
+	recombined := tiny.RecombinePhrases(leftBits, rightBits)
 	h2 := sdl2.Create(core.Impulse, false, when.Frequency(&framerate), "Recombined", nil, nil)
 	viewport.NewBasicByteWave(h2, backgroundColor, colors.Red, recombined.AsBytes())
 
@@ -36,13 +36,21 @@ func main() {
 
 // Massage performs several operations on the provided data.
 //
-// If invert is true, every byte is XORd against 11111111.
-//
-// If derive is true, the derivative of the data is used.
+// If invert is true, every bit is XORd against 1.
 //
 // The provided mask is then projected against the data, and the difference from the
 // projection to the original data is returned. As this yields a signed value, the data
 // is "biased" upward by adding 128 to every value.
-func Massage(invert bool, derive bool, mask byte, data []byte) []byte {
+func Massage(invert bool, mask tiny.Measurement, data []byte) []byte {
+	if len(data) == 0 {
+		return data
+	}
 
+	if invert {
+		for i := range data {
+			data[i] ^= 0xFF
+		}
+	}
+
+	return data
 }
